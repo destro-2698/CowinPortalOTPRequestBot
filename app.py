@@ -108,6 +108,8 @@ def contact(update: Update, _: CallbackContext) -> int:
     user = update.message.from_user
     user_contact = update.message.contact
     phoneNumber = user_contact.phone_number
+    if(len(phoneNumber) == 12):
+        phoneNumber = phoneNumber[2:]
     update.message.reply_text(
         'Thanks',
         reply_markup=ReplyKeyboardRemove(),
