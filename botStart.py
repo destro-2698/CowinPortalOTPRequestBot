@@ -22,6 +22,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import psycopg2
+
 from telegram import (
     Update,
     ForceReply,
@@ -70,7 +72,7 @@ def button(update: Update, _: CallbackContext) -> None:
 
 def help_command(update: Update, _: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Send /getotp to send OTP to your phone number')
+    update.message.reply_text('Send\n/getotp to send OTP to your phone number\n/log to get the latest log')
 
 def postOTP(phoneNumber):
     url = "https://cdn-api.co-vin.in/api/v2/auth/public/generateOTP"
@@ -127,6 +129,34 @@ def cancel(update: Update, _: CallbackContext) -> int:
 
     return ConversationHandler.END
 
+def log_command(update: Update, _: CallbackContext) -> None:
+    conn = makeDBconnection()
+    message = getLog(conn = conn)
+    update.message.reply_text(message)
+    conn.close()
+
+#make db connection
+def makeDBconnection():
+    #Establishing the connection
+    conn = psycopg2.connect(
+        database="botdb", user='postgres', password='admin', host='127.0.0.1', port= '5432'
+    )
+    #Setting auto commit false
+    conn.autocommit = True
+    return conn
+
+#get latest entry to db
+def getLog(conn):
+    cursor = conn.cursor()
+    #Retrieving specific records using the ORDER BY clause
+    cursor.execute("SELECT * from logger ORDER BY id DESC LIMIT 1")
+    message = cursor.fetchall()
+    message = message[0]
+    message = str(message[0]) + " " + message[1] 
+    #Commit your changes in the database
+    conn.commit()
+    return message
+
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
@@ -138,6 +168,7 @@ def main() -> None:
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
+    dispatcher.add_handler(CommandHandler("log", log_command))
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
 
     #add conversation handler
