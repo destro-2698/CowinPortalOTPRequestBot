@@ -43,6 +43,8 @@ from telegram.ext import (
     ConversationHandler
 )
 
+import time
+
 # Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -149,13 +151,19 @@ def makeDBconnection():
 def getLog(conn):
     cursor = conn.cursor()
     #Retrieving specific records using the ORDER BY clause
-    cursor.execute("SELECT * from logger ORDER BY id DESC LIMIT 1")
-    message = cursor.fetchall()
-    message = message[0]
-    message = str(message[0]) + " " + message[1] 
+    cursor.execute("SELECT * from logger ORDER BY id DESC LIMIT 21")
+    messages = cursor.fetchall()
+    finalMessage = ""
+    #print(messages)
+    
+    for message in messages:
+        message = str(message[0]) + " " + message[1] + "\n"
+        finalMessage = finalMessage + message
+    #message = message[0]
+    #message = str(message[0]) + " " + message[1] 
     #Commit your changes in the database
     conn.commit()
-    return message
+    return finalMessage
 
 def main() -> None:
     """Start the bot."""
